@@ -3,29 +3,36 @@ from datetime import datetime
 import pandas as pd
 from jobspy import scrape_jobs
 
-def fetch_philippine_jobs(search_terms=["Software Engineer", "Full Stack Developer", "Python Developer"], location="Philippines", results_wanted=20):
-    """Fetches live job postings across platforms tailored to the Philippines."""
+def fetch_philippine_jobs(search_terms=[
+    "Software Engineer", 
+    "Full Stack Developer", 
+    "Python Developer", 
+    "React Developer"
+], location="Philippines", results_wanted=25):
+    """Fetches live job postings with isolated error handling per platform."""
     all_jobs = []
+    platforms = ["indeed", "linkedin", "zip_recruiter"]
     
     for term in search_terms:
-        print(f"Fetching live jobs for '{term}' in '{location}'...")
-        try:
-            df_jobs = scrape_jobs(
-                site_name=["indeed", "linkedin", "zip_recruiter"],
-                search_term=term,
-                location=location,
-                results_wanted=results_wanted,
-                hours_old=168, # Last 7 days
-                country_indeed='Philippines'
-            )
-            if not df_jobs.empty:
-                all_jobs.append(df_jobs)
-        except Exception as e:
-            print(f"Scraping failed for term '{term}': {e}")
+        for site in platforms:
+            print(f"Scraping '{term}' on {site} for '{location}'...")
+            try:
+                df_site = scrape_jobs(
+                    site_name=[site],
+                    search_term=term,
+                    location=location,
+                    results_wanted=results_wanted,
+                    hours_old=168, # Last 7 days
+                    country_indeed='Philippines'
+                )
+                if not df_site.empty:
+                    all_jobs.append(df_site)
+            except Exception as e:
+                print(f"⚠️ Notice: Skipped {site} for '{term}' due to rate limit/block: {e}")
             
     if all_jobs:
         combined_df = pd.concat(all_jobs, ignore_index=True)
-        # Drop duplicate URLs if multiple search terms return the same job
+        # Drop duplicate URLs
         combined_df = combined_df.drop_duplicates(subset=['job_url'])
         print(f"Successfully scraped {len(combined_df)} unique jobs in the Philippines.")
         return combined_df
@@ -34,25 +41,20 @@ def fetch_philippine_jobs(search_terms=["Software Engineer", "Full Stack Develop
         return get_fallback_jobs()
 
 def get_fallback_jobs():
-    """Provides fallback sample data if live scraping encounters rate limits."""
+    """Provides fallback sample data if live scraping encounters blocks."""
     return pd.DataFrame([
         {
-            "title": "Python / Django Developer",
+            "title": "Full-Stack Software Engineer (React / TypeScript)",
             "company": "Manila Tech Solutions",
             "location": "Taguig, Metro Manila, PH",
             "job_url": "https://ph.indeed.com/viewjob?jk=example1",
             "site": "indeed",
-            "description": "<p>Looking for a Python Developer experienced in SQL, React, and building REST APIs.</p>",
-            "date_posted": datetime.now().strftime('%Y-%m-%d')
-        },
-        {
-            "title": "Shopify E-Commerce Specialist",
-            "company": "Cebu Digital Hub",
-            "location": "Cebu City, PH",
-            "job_url": "https://www.linkedin.com/jobs/view/example2",
-            "site": "linkedin",
-            "description": "Seeking a developer skilled in Shopify theme development, WordPress, PHP, and JavaScript.",
-            "date_posted": datetime.now().strftime('%Y-%m-%d')
+            "description": "<p>Looking for a Full Stack Engineer proficient in Next.js, TypeScript, React, PostgreSQL, and Python.</p>",
+            "date_posted": datetime.now().strftime('%Y-%m-%d'),
+            "min_amount": 50000,
+            "max_amount": 80000,
+            "currency": "PHP",
+            "job_type": "Full-time"
         }
     ])
 
@@ -65,8 +67,12 @@ def clean_html(raw_html):
     return ' '.join(text.split())
 
 def extract_skills(description_text):
-    """Extracts technical skills using case-insensitive Regex word boundaries."""
-    target_skills = ['Python', 'React', 'Shopify', 'TypeScript', 'SQL', 'WordPress', 'PHP', 'JavaScript']
+    """Extracts technical skills using case-insensitive Regex whole-word boundaries."""
+    target_skills = [
+        'Python', 'React', 'Next.js', 'TypeScript', 'JavaScript', 
+        'SQL', 'PostgreSQL', 'MySQL', 'PHP', 'Shopify', 'WordPress', 
+        'Tailwind', 'Node.js', 'REST APIs', 'Docker'
+    ]
     found_skills = []
     
     for skill in target_skills:
@@ -74,7 +80,7 @@ def extract_skills(description_text):
         if re.search(pattern, description_text, re.IGNORECASE):
             found_skills.append(skill)
             
-    return found_skills
+    return list(set(found_skills))
 
 def run_etl_pipeline():
     """Executes the complete Ingestion, Cleaning, and Extraction pipeline."""
@@ -91,12 +97,15 @@ def run_etl_pipeline():
     }
     df = df.rename(columns=column_mapping)
     
+    # Ensure optional columns exist from jobspy output
+    for col in ['min_amount', 'max_amount', 'currency', 'job_type', 'source']:
+        if col not in df.columns:
+            df[col] = None
+
     if 'description' not in df.columns:
         df['description'] = ""
     if 'posted_date' not in df.columns:
         df['posted_date'] = datetime.now()
-    if 'source' not in df.columns:
-        df['source'] = 'indeed'
 
     df['clean_description'] = df['description'].apply(clean_html)
     df['extracted_skills'] = df['clean_description'].apply(extract_skills)
@@ -105,4 +114,4 @@ def run_etl_pipeline():
 
 if __name__ == "__main__":
     processed_df = run_etl_pipeline()
-    print(processed_df[['title', 'company', 'source', 'extracted_skills']].head())
+    print(processed_df[['title', 'company', 'source', 'min_amount', 'max_amount', 'extracted_skills']].head())
