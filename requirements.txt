@@ -1,6 +1,11 @@
+<<<<<<< HEAD
 streamlit>=1.49.0
+=======
+>>>>>>> 0abbd82b2b2bc9059b153e2866f24154fa70fd77
 pandas>=2.0.0
-psycopg2-binary>=2.9.9
-python-dotenv>=1.0.0
-plotly>=5.18.0
 python-jobspy>=1.1.0
+sqlalchemy>=2.0.0
+pymysql>=1.1.0
+streamlit>=1.25.0
+plotly>=5.0.0
+python-dotenv>=1.0.0
