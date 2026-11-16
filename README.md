@@ -38,7 +38,7 @@
 *   **🧹 Robust ETL & NLP Parser:** Strips raw HTML descriptions and executes **Regular Expressions (RegEx)** with whole-word boundary matching to extract high-demand skills (*Python, React, Shopify, TypeScript, SQL, WordPress, PHP, JavaScript*).
 *   **🗄️ Normalized Relational Database:** Built on MySQL with a structured schema (`jobs`, `companies`, `skills`, and a many-to-many `job_skills` junction table) complete with indexing for lightning-fast aggregation queries.
 *   **📊 Interactive Analytics Dashboard:** Built with **Streamlit** and **Plotly** to visualize real-time tech stack demand and compare CMS platforms vs. traditional software frameworks.
-*   **🎯 Built-in Application Tracker:** Features real-time search filters, sorting by posting date, direct clickable job links, and a persistent database-backed "Applied" checkbox tracker.
+*   **🎯 Built-in Application Tracker:** Features real-time search filters, latest/oldest posting-date sorting, 10-listing pagination, direct clickable job links, and persistent, mutually exclusive "Applied" and "Denied" status checkboxes.
 
 ---
 
@@ -76,6 +76,12 @@ Open XAMPP and start the MySQL server.
 
 Open phpMyAdmin (http://localhost/phpmyadmin), create a database named jobpulse_db, and run the SQL commands found in database.sql.
 
+For an existing database, add the Denied status column before starting the updated dashboard:
+
+```sql
+ALTER TABLE jobs ADD COLUMN is_denied BOOLEAN NOT NULL DEFAULT FALSE;
+```
+
 Create a .env file in your root folder and add your local connection string:
 
 Code snippet
@@ -109,6 +115,7 @@ CREATE TABLE jobs (
     description TEXT,
     posted_date DATETIME,
     is_applied BOOLEAN DEFAULT FALSE,
+    is_denied BOOLEAN NOT NULL DEFAULT FALSE,
     scraped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
     INDEX idx_posted_date (posted_date),

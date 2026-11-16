@@ -17,6 +17,8 @@ CREATE TABLE jobs (
     salary_max DECIMAL(10, 2),
     currency VARCHAR(10) DEFAULT 'PHP',
     posted_date DATETIME,
+    is_applied BOOLEAN NOT NULL DEFAULT FALSE,
+    is_denied BOOLEAN NOT NULL DEFAULT FALSE,
     scraped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (company_id) REFERENCES companies(id) ON DELETE CASCADE,
     INDEX idx_posted_date (posted_date),
