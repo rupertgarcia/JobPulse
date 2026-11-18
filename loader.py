@@ -61,12 +61,21 @@ def load_data_to_database(df):
             else:
                 job_id = str(uuid.uuid4())
                 
-                # Handle salary and numerical formatting safely
+                # Sanitize values to prevent pandas NaN errors with MySQL
                 min_sal = row.get('min_amount')
                 max_sal = row.get('max_amount')
                 min_sal = float(min_sal) if pd.notna(min_sal) else None
                 max_sal = float(max_sal) if pd.notna(max_sal) else None
-                
+
+                job_type = row.get('job_type')
+                job_type = str(job_type) if pd.notna(job_type) and job_type else 'Full-time'
+
+                currency = row.get('currency')
+                currency = str(currency) if pd.notna(currency) and currency else 'PHP'
+
+                source_val = row.get('source')
+                source_val = str(source_val) if pd.notna(source_val) and source_val else 'indeed'
+
                 conn.execute(
                     text("""
                         INSERT INTO jobs (
@@ -88,9 +97,9 @@ def load_data_to_database(df):
                         "posted_date": pd.to_datetime(row.get('posted_date', pd.Timestamp.now())),
                         "min_sal": min_sal,
                         "max_sal": max_sal,
-                        "currency": row.get('currency', 'PHP') or 'PHP',
-                        "job_type": row.get('job_type', 'Full-time') or 'Full-time',
-                        "source": row.get('source', 'indeed') or 'indeed'
+                        "currency": currency,
+                        "job_type": job_type,
+                        "source": source_val
                     }
                 )
                 inserted_count += 1

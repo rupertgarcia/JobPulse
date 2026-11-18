@@ -4,11 +4,26 @@ import pandas as pd
 from jobspy import scrape_jobs
 
 def fetch_philippine_jobs(search_terms=[
-    "Software Engineer", 
-    "Full Stack Developer", 
-    "Python Developer", 
-    "React Developer"
-], location="Philippines", results_wanted=25):
+    # Entry-Level & Associate Titles
+    "Junior Software Engineer",
+    "Associate Software Engineer",
+    "Entry Level Software Developer",
+    "Graduate Trainee Software",
+    "IT Associate",
+    
+    # Core Development Roles
+    "Full Stack Developer",
+    "Frontend Developer",
+    "Backend Developer",
+    "Python Developer",
+    "React Developer",
+    
+    # Engineering & Tech Roles
+    "Software Engineer",
+    "Web Developer",
+    "Data Analyst",
+    "IT Integration Specialist"
+], location="Philippines", results_wanted=20):
     """Fetches live job postings with isolated error handling per platform."""
     all_jobs = []
     platforms = ["indeed", "linkedin", "zip_recruiter"]
