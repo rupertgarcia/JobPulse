@@ -10,6 +10,7 @@ def fetch_philippine_jobs(search_terms=[
     "Entry Level Software Developer",
     "Graduate Trainee Software",
     "IT Associate",
+    "Tech Support Representative",
     
     # Core Development Roles
     "Full Stack Developer",
